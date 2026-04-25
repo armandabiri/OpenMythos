@@ -6,34 +6,21 @@ Research-first PyTorch implementation of a recurrent-depth transformer that comb
 
 ## Table of Contents
 
-- [OpenMythos](#openmythos)
-  - [Table of Contents](#table-of-contents)
-  - [Overview](#overview)
-    - [Project Map](#project-map)
-  - [System Architecture](#system-architecture)
-    - [Inference Sequence](#inference-sequence)
-  - [Getting Started](#getting-started)
-    - [Installation](#installation)
-    - [Quick Start](#quick-start)
-  - [CLI Reference](#cli-reference)
-  - [Core Functionality](#core-functionality)
-    - [Execution Modes](#execution-modes)
-    - [Attention Backends](#attention-backends)
-    - [Recurrent Depth, Halting, and Stability](#recurrent-depth-halting-and-stability)
-    - [MoE Routing](#moe-routing)
-    - [Model Variants](#model-variants)
-    - [Training Workflow](#training-workflow)
-  - [Configuration](#configuration)
-    - [Core Model Fields](#core-model-fields)
-    - [Attention Fields](#attention-fields)
-    - [MoE and Control Fields](#moe-and-control-fields)
-  - [Version History](#version-history)
-  - [License and Maintenance](#license-and-maintenance)
-  - [Citation](#citation)
+- [Overview](#overview)
+- [System Architecture](#system-architecture)
+- [Mathematical Formulation](#mathematical-formulation)
+- [What Is New](#what-is-new)
+- [Getting Started](#getting-started)
+- [CLI Reference](#cli-reference)
+- [Core Functionality](#core-functionality)
+- [Configuration](#configuration)
+- [Version History](#version-history)
+- [License and Maintenance](#license-and-maintenance)
+- [Citation](#citation)
 
 ## Overview
 
-OpenMythos is a Python library for experimenting with a looped transformer architecture that separates computation into a **Prelude**, a shared **Recurrent Block**, and a final **Coda**. The project exposes:
+OpenMythos is a Python library for studying a recurrent-depth language model whose forward map is decomposed into three operators: a **Prelude** \(finite-depth feature extraction\), a shared **Recurrent Block** \(iterated latent refinement\), and a **Coda** \(post-recurrence readout\). Concretely, the repository exposes:
 
 - ✅ A configurable `MythosConfig` dataclass in [open_mythos/main.py](open_mythos/main.py)
 - ✅ Dual attention implementations: `MLAttention` and `GQAttention`
@@ -55,7 +42,7 @@ docs/          API reference and dataset guidance
 
 ## System Architecture
 
-The runtime is organized around a tokenization stage, a loop-capable model core, and generation or training outputs.
+The runtime is organized around a tokenization stage, a loop-capable model core, and generation or training outputs. From the implementation point of view, the relevant state variables are the token indices, the embedded sequence \(x\), the frozen prelude encoding \(e\), the recurrent hidden state \(h_t\), and the emitted logits.
 
 ```mermaid
 flowchart LR
@@ -129,6 +116,171 @@ sequenceDiagram
         O-->>U: Decode text or compute loss
     end
 ```
+
+## Mathematical Formulation
+
+Let \(u = (u_1,\dots,u_T)\) be a token sequence, let \(E\) denote the token embedding map, and write
+
+\[
+x^{(0)} = E(u) \in \mathbb{R}^{T \times d}.
+\]
+
+The model is then the composition of three maps:
+
+\[
+u \mapsto x^{(0)} \xrightarrow{\;\mathcal P\;} e \xrightarrow{\;\mathcal R_T\;} h^\star \xrightarrow{\;\mathcal C\;} z,
+\]
+
+where:
+
+- \(\mathcal P\) is the Prelude operator, implemented as `prelude_layers` standard transformer blocks,
+- \(\mathcal R_T\) is the recurrent operator, obtained by iterating one shared block up to \(T = \texttt{max\_loop\_iters}\) times,
+- \(\mathcal C\) is the Coda operator, implemented as `coda_layers` standard transformer blocks,
+- \(z \in \mathbb{R}^{T \times |\mathcal V|}\) are the output logits.
+
+### Prelude
+
+If \(\mathcal P_1,\dots,\mathcal P_p\) denote the dense prelude blocks, then
+
+\[
+e = \mathcal P_p \circ \cdots \circ \mathcal P_1(x^{(0)}).
+\]
+
+In the code this is the tensor stored as the frozen input encoding \(e\), which is re-injected at every recurrent step rather than being discarded after the prelude.
+
+### Recurrent Block
+
+The recurrent block evolves a latent state \(h_t \in \mathbb{R}^{T \times d}\). The initialization is
+
+\[
+h_0 = e.
+\]
+
+At recurrent depth \(t\), the implementation computes
+
+\[
+\tilde h_t = h_t + \phi_{\mathrm{loop}}(t),
+\]
+
+where \(\phi_{\mathrm{loop}}\) is the loop-index embedding. After normalization and a shared transformer block, a depth-wise LoRA perturbation is added:
+
+\[
+r_t = F_\theta\!\big(\mathrm{RMSNorm}(\tilde h_t + e)\big) + \Delta_t^{\mathrm{LoRA}}.
+\]
+
+The state update is then
+
+\[
+h_{t+1} = A \odot h_t + B \odot e + r_t.
+\]
+
+This is exactly the update implemented by `LTIInjection.forward`, and it is the mathematically important novelty of the core recurrence: the model is not merely "the same block repeated," but a forced dynamical system driven by the persistent encoded input \(e\).
+
+### Stable Injection
+
+The matrix \(A\) is not learned as an unconstrained operator. Instead, the code parameterizes a diagonal contraction through
+
+\[
+A = \exp\!\big(-\exp(\log \Delta t + \log A_0)\big),
+\]
+
+with clamping in log-space for numerical stability. In particular, each coordinate of \(A\) lies in \((0,1)\), so the linear part of the recurrence is contractive coordinatewise. Informally: absent the nonlinear residual term \(r_t\), the latent dynamics do not explode.
+
+### ACT Halting
+
+At each recurrent step the model predicts a halting probability
+
+\[
+p_t = \sigma(W_{\mathrm{halt}} h_t) \in (0,1)^T.
+\]
+
+The final recurrent output is not simply \(h_T\), but an ACT-weighted sum
+
+\[
+h^\star = \sum_{t=1}^{T} \alpha_t \odot h_t,
+\]
+
+where the weights \(\alpha_t\) are determined by cumulative halting mass and a remainder correction so that each position contributes exactly until it halts. In other words, recurrent depth is adaptive at the token level.
+
+### Attention and MoE
+
+The shared block \(F_\theta\) can be instantiated in two geometrically different ways:
+
+- `GQAttention`: standard grouped-query attention with \(n_{\mathrm{kv}} < n_{\mathrm{q}}\), hence smaller KV cache complexity,
+- `MLAttention`: a compressed latent attention map in which the KV state is projected into a lower-dimensional latent space before reuse.
+
+The feed-forward component in the recurrent block is a sparse MoE map
+
+\[
+\mathrm{MoE}(x) = \sum_{j \in \mathrm{TopK}(x)} \pi_j(x)\,E_j(x) \;+\; \sum_{s \in \mathcal S} S_s(x),
+\]
+
+where \(E_j\) are routed experts, \(\pi_j\) are routing weights, and \(S_s\) are always-on shared experts.
+
+### Autoregressive Generation
+
+For decoding, the repository implements a KV-cached autoregressive map. If \(u_{\le t}\) is the prefix, then the next-token law is
+
+\[
+\Pr(u_{t+1} = k \mid u_{\le t})
+=
+\mathrm{softmax}\!\left(\frac{z_t}{\tau}\right)_k,
+\]
+
+optionally truncated to the top-\(K\) logits before sampling. The recurrent depth parameter `n_loops` may be increased at inference time, so the repo explicitly supports depth extrapolation as an experimental knob.
+
+### Where This Is Implemented
+
+The mathematical objects above correspond directly to the following implementation sites:
+
+- **RoPE precomputation and application**: [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:124>) and [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:146>)
+- **Grouped Query Attention**: [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:177>)
+- **Multi-Latent Attention**: [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:284>)
+- **Sparse MoE feed-forward operator**: [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:456>)
+- **Loop-index embedding \(\phi_{\mathrm{loop}}\)**: [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:541>)
+- **Depth-wise LoRA perturbation \(\Delta_t^{\mathrm{LoRA}}\)**: [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:578>)
+- **Stable injection \(h_{t+1} = A \odot h_t + B \odot e + r_t\)**: [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:684>)
+- **ACT halting probability \(p_t\)**: [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:750>)
+- **Full recurrent loop and ACT-weighted sum**: [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:788>)
+- **Prelude \(\rightarrow\) Recurrent \(\rightarrow\) Coda composition**: [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:899>)
+- **Autoregressive decoding law**: [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:1035>)
+
+### How It Is Realized In Torch
+
+The mathematics is not merely described in comments; it is realized as explicit PyTorch objects:
+
+- \(u\) is the integer tensor `input_ids: torch.Tensor` passed into `OpenMythos.forward` at [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:991>)
+- \(x^{(0)} = E(u)\) is computed by `self.embed(input_ids)` where `self.embed` is an `nn.Embedding` at [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:933>) and [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:1018>)
+- the Prelude operator \(\mathcal P\) is an `nn.ModuleList` of transformer blocks at [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:945>) and is executed in the loop at [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:1024>)
+- the frozen prelude encoding \(e\) is the tensor assignment `e = x` at [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:1027>)
+- the recurrent state \(h_t\) is the tensor `h` inside `RecurrentBlock.forward` at [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:824>)
+- the contraction coefficients \(A\) and input-injection coefficients \(B\) are `nn.Parameter` objects `log_A`, `log_dt`, and `B` in `LTIInjection` at [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:709>)
+- the loop-index perturbation is a tensor built by `torch.arange`, `sin`, `cos`, and broadcasting in `loop_index_embedding` at [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:561>)
+- the shared recurrent map \(F_\theta\) is the `TransformerBlock` stored as `self.block` inside `RecurrentBlock` at [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:815>)
+- the LoRA correction \(\Delta_t^{\mathrm{LoRA}}\) is computed by `self.lora(trans_out, t)` using `nn.Linear`, `nn.Embedding`, and matrix multiplication at [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:598>) and [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:861>)
+- the ACT probability \(p_t\) is the tensor `torch.sigmoid(self.halt(h)).squeeze(-1)` at [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:779>)
+- the ACT-weighted latent sum \(h^\star\) is accumulated in the tensor `h_out` using `torch.where`, masking, and broadcasted multiplication at [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:852>) and [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:873>)
+- the final logits \(z\) are the tensor returned by `self.head(self.norm(x))` at [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:1033>)
+- the decoding measure \(\mathrm{softmax}(z_t/\tau)\) is realized by `F.softmax`, top-\(K\) truncation, and `torch.multinomial` at [open_mythos/main.py](</d:/repos/OpenMythos/open_mythos/main.py:1077>)
+
+## What Is New
+
+Relative to the older state of the repository, the most recent additions are:
+
+- **Interactive chat example**: `examples/chat_example.py` now provides a terminal chat path, a checkpoint-loading path, and a stronger Hugging Face fallback model for immediate experimentation.
+- **Variant-aware smoke testing**: the example now accepts named OpenMythos variants such as `mythos_1b`, `mythos_10b`, and `mythos_100b`, with an explicit hardware guard instead of a late OOM failure.
+- **Code-oriented response handling**: for code requests, the example allocates a larger generation budget and returns the first complete fenced code block, which materially reduces truncated answers.
+- **New examples directory**: the repo now contains `chat_example.py`, `variants_example.py`, and `moda_example.py`, so the project is easier to evaluate from the command line.
+- **Flash Attention support**: the attention implementation now has explicit Flash Attention integration when the optional dependency is installed.
+- **Recent correctness fixes in the core model**: the latest history includes fixes to ACT halting accumulation, MoE router bias behavior, KV-cache consistency across recurrent loops, LoRA depth extrapolation, and RoPE position handling during decoding.
+- **Training pipeline cleanup**: the training scripts now include clearer logging and repository-local requirements for reproducing small and larger-scale runs.
+
+In more mathematical language, the repository is no longer just "an implementation of a looped transformer." It has become a more explicit experimental platform for:
+
+- constrained recurrent dynamics,
+- adaptive latent-time computation,
+- sparse expert routing inside a shared recurrent operator,
+- and inference-time depth variation under KV-cached decoding.
 
 ## Getting Started
 
@@ -204,7 +356,7 @@ OpenMythos does not currently ship a packaged CLI binary. The repo is operated t
 | Script                                   | Purpose                                                                                                   | Example                                                                    |
 | ---------------------------------------- | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | `examples/chat_example.py`               | Interactive terminal chat using either a trained OpenMythos checkpoint or a stronger fallback instruct model | `python examples/chat_example.py --checkpoint checkpoints/step_0005000.pt` |
-| `examples/chat_example.py --random-init` | Smoke-test the OpenMythos generation path with an untrained tiny config                                   | `python examples/chat_example.py --random-init`                            |
+| `examples/chat_example.py --random-init` | Smoke-test the OpenMythos generation path with an untrained OpenMythos variant                            | `python examples/chat_example.py --random-init --variant mythos_1b`        |
 | `examples/variants_example.py`           | Instantiate a predefined model variant and print its parameter count                                      | `python examples/variants_example.py`                                      |
 | `examples/moda_example.py`               | Run the alternative MoDA smoke test and verify gradients                                                  | `python examples/moda_example.py`                                          |
 | `training/tiny_pretrain.py`              | Train a small checkpoint that can be loaded by the chat example                                           | `python training/tiny_pretrain.py`                                         |
@@ -218,7 +370,7 @@ OpenMythos does not currently ship a packaged CLI binary. The repo is operated t
 | ---------------------- | --------------------------------------------------- | ------------------------------------- | ------------------------------------------------ |
 | OpenMythos checkpoint  | `--checkpoint path/to/step_*.pt`                    | Trained OpenMythos weights            | Real model experiments and checkpoint evaluation |
 | HF fallback chat       | Run `examples/chat_example.py` without a checkpoint | `Qwen/Qwen2.5-1.5B-Instruct` | Out-of-the-box interactive demo                  |
-| Random-init smoke test | `--random-init`                                     | Tiny untrained OpenMythos config      | Wiring validation only; gibberish is expected    |
+| Random-init smoke test | `--random-init`                                     | Random-initialized OpenMythos variant | Wiring validation only; gibberish is expected    |
 
 ### Attention Backends
 
