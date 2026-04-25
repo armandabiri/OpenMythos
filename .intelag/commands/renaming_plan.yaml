@@ -1,0 +1,64 @@
+repo_root: .
+apply_changes: true
+target_scope:
+directories:
+  engines: intelag_config_model/config_model/modules
+  connection_logic: intelag_config_model/db_connectivity/modules
+  engine_adapters: intelag_config_model/db_manager/adapters
+  migration_tools: intelag_config_model/db_manager/fast_migration
+  remote_db_client: intelag_config_model/db_service
+files:
+  db_server_cfg.yaml: intelag_config_model/config/database_server_cfg.yaml
+  loader_mixin.py: intelag_config_model/config_model/modules/config_loader_mixin.py
+  merger_mixin.py: intelag_config_model/config_model/modules/config_merge_mixin.py
+  serializer_mixin.py: intelag_config_model/config_model/modules/config_serializer_mixin.py
+  yaml_handler.py: intelag_config_model/config_model/modules/config_yaml_ops_mixin.py
+  env_resolver.py: intelag_config_model/config_model/modules/env_expansion.py
+  format_manager.py: intelag_config_model/config_model/modules/file_format_handler.py
+  resource_resolver.py: intelag_config_model/config_model/modules/package_resource_loader.py
+  credential_models.py: intelag_config_model/db_connectivity/models/connection_info.py
+  db_connectivity_config.py: intelag_config_model/db_connectivity/models/service_config.py
+  database_connection_manager.py: intelag_config_model/db_connectivity/modules/connection_manager.py
+  service_orchestration_engine.py: intelag_config_model/db_connectivity/modules/service_orchestrator.py
+  abstract_adapter.py: intelag_config_model/db_manager/adapters/base.py
+  postgres_adapter.py: intelag_config_model/db_manager/adapters/postgres.py
+  sqlite_adapter.py: intelag_config_model/db_manager/adapters/sqlite.py
+  migration_base.py: intelag_config_model/db_manager/fast_migration/common.py
+  exporter_logic.py: intelag_config_model/db_manager/fast_migration/pg_to_sqlite.py
+  pgloader_toolkit.py: intelag_config_model/db_manager/fast_migration/pgloader_ops.py
+  rapid_sync_logic.py: intelag_config_model/db_manager/fast_migration/quick_sync.py
+  sqlite_to_pg_logic.py: intelag_config_model/db_manager/fast_migration/sqlite_to_pg.py
+  core_synchronizer.py: intelag_config_model/db_manager/fast_migration/synchronizer.py
+  migration_utils.py: intelag_config_model/db_manager/fast_migration/utils.py
+  migration_validator.py: intelag_config_model/db_manager/fast_migration/validation.py
+  connection_op_mixin.py: intelag_config_model/db_manager/mixins/connection_mixin.py
+  maintenance_op_mixin.py: intelag_config_model/db_manager/mixins/maintenance_mixin.py
+  base_op_mixin.py: intelag_config_model/db_manager/mixins/operations_mixin.py
+  query_op_mixin.py: intelag_config_model/db_manager/mixins/query_mixin.py
+  schema_op_mixin.py: intelag_config_model/db_manager/mixins/schema_mixin.py
+  sync_op_mixin.py: intelag_config_model/db_manager/mixins/sync_mixin.py
+  db_adapter_factory.py: intelag_config_model/db_manager/adapter_factory.py
+  model_db_manager.py: intelag_config_model/db_manager/manager.py
+  cross_db_validator.py: intelag_config_model/db_manager/sqlite_pg_comparison.py
+  sync_orchestrator.py: intelag_config_model/db_manager/sync_manager.py
+  db_connectivity_manager.py: intelag_config_model/db_service/db_adapter.py
+  common_config_utils.py: intelag_config_model/utils/config_utils.py
+  dynamic_importer.py: intelag_config_model/utils/safe_import.py
+  temp_file_handler.py: intelag_config_model/utils/tmp.py
+  logging_verbosity_manager.py: intelag_config_model/utils/verbose_mode.py
+classes:
+  - old_rel_file: intelag_config_model/config_model/modules/config_loader_mixin.py
+    renames:
+      BaseConfigLoader: ConfigLoaderMixin
+  - old_rel_file: intelag_config_model/config_model/modules/config_merge_mixin.py
+    renames:
+      BaseConfigMerger: ConfigMergeMixin
+  - old_rel_file: intelag_config_model/config_model/modules/config_serializer_mixin.py
+    renames:
+      BaseConfigSerializer: ConfigSerializerMixin
+  - old_rel_file: intelag_config_model/config_model/modules/config_yaml_ops_mixin.py
+    renames:
+      YamlConfigHandler: ConfigYamlOpsMixin
+  - old_rel_file: intelag_config_model/db_manager/sync_manager.py
+    renames:
+      SyncManager: BaseSyncManager

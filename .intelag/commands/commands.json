@@ -1,0 +1,761 @@
+[
+  {
+    "name": "Agent Summarizing",
+    "description": "Summarize instructions using a file path and output directory.",
+    "type": "prompt",
+    "expression": "Use my instruction in {FILE_PATH} and summarize this in {OUTPUT}/{DATE}.txt",
+    "group": "Tools",
+    "shortcut": "T S",
+    "variables": [
+      {
+        "name": "FILE_PATH",
+        "description": "Path to the instruction file",
+        "default": ".intelag/instructions/readme_standard.md"
+      },
+      {
+        "name": "OUTPUT",
+        "description": "Output directory",
+        "default": ".intelag/summaries"
+      }
+    ]
+  },
+  {
+    "name": "Tree Structure",
+    "description": "Generate a folder tree structure.",
+    "type": "command",
+    "expression": "errorDashboard.copyFolderTree",
+    "group": "Tools",
+    "shortcut": "T T",
+    "variables": [
+      {
+        "name": "FOLDER",
+        "description": "The folder to generate the tree for",
+        "default": "."
+      }
+    ]
+  },
+  {
+    "name": "List Python Files",
+    "description": "List all python files in the current directory.",
+    "type": "script",
+    "expression": "dir /s /b *.py",
+    "group": "Python Maintenance",
+    "shortcut": "P L",
+    "variables": []
+  },
+  {
+    "name": "Run Mypy",
+    "description": "Run mypy on a specific path.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py --deps mypy && {PYTHON_EXE} -m mypy {PATH}",
+    "group": "Python Maintenance",
+    "shortcut": "P M",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable in the virtual environment",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "PATH",
+        "description": "Path to run mypy on",
+        "default": "."
+      }
+    ]
+  },
+  {
+    "name": "Apply Intelag Python Rules to TOML",
+    "description": "Apply STANDARD INTELAG RULES from .intelag/python/pyproject.toml into the active or selected pyproject.toml. Right-click a .toml file or run with a TOML file open.",
+    "type": "command",
+    "expression": "intelag.python.applyIntelagRulesToToml",
+    "group": "Python Maintenance",
+    "variables": []
+  },
+  {
+    "name": "Format and Lint",
+    "description": "Install dependencies and run absolufy-imports, isort, and ruff.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py && {PYTHON_EXE} .intelag/commands/scripts/format_and_lint.py --python-exe {PYTHON_EXE} --path {PATH} --exclude \"{EXCLUDE_PATTERNS}\"",
+    "group": "Python Maintenance",
+    "shortcut": "P F",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable in the virtual environment",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "EXCLUDE_PATTERNS",
+        "description": "Comma-separated list of patterns to exclude",
+        "default": ".*,.mypy_cache,.venv"
+      },
+      {
+        "name": "PATH",
+        "description": "Path to the directory to format and lint",
+        "default": "."
+      }
+    ]
+  },
+  {
+    "name": "MonkeyType (Script)",
+    "description": "Install monkeytype, run a specific script to collect types, and apply them to all discovered modules.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py && {PYTHON_EXE} .intelag/commands/scripts/monkeytype_apply.py --python-exe {PYTHON_EXE} --path {PATH} --script {SCRIPT}",
+    "group": "Python Maintenance",
+    "shortcut": "P S",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable in the virtual environment",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "SCRIPT",
+        "description": "The script to run to collect types",
+        "default": "main.py"
+      },
+      {
+        "name": "PATH",
+        "description": "Path to the directory containing modules to apply types to",
+        "default": "."
+      }
+    ]
+  },
+  {
+    "name": "MonkeyType (Directory)",
+    "description": "Install monkeytype and apply existing type stubs to all discovered modules.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py && {PYTHON_EXE} .intelag/commands/scripts/monkeytype_apply.py --python-exe {PYTHON_EXE} --path {PATH}",
+    "group": "Python Maintenance",
+    "shortcut": "P D",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable in the virtual environment",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "PATH",
+        "description": "Path to the directory containing modules to apply types to",
+        "default": "."
+      }
+    ]
+  },
+  {
+    "name": "Find Dead Code (Vulture)",
+    "description": "Run vulture to find unused code in a directory, saving the report to .intelag/issues/vulture_report.txt.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py --deps vulture && {PYTHON_EXE} -c \"import os; os.makedirs('.intelag/issues', exist_ok=True)\" && {PYTHON_EXE} -m vulture {PATH} --exclude {EXCLUDE_PATTERNS} > .intelag/issues/vulture_report.txt",
+    "group": "Python Maintenance",
+    "shortcut": "P V",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable in the virtual environment",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "EXCLUDE_PATTERNS",
+        "description": "Comma-separated list of patterns to exclude",
+        "default": ".*,.mypy_cache,.venv"
+      },
+      {
+        "name": "PATH",
+        "description": "Path to the directory to scan for dead code",
+        "default": "."
+      }
+    ]
+  },
+  {
+    "name": "Docformatter",
+    "description": "Run docformatter on a directory recursively, forcing multi-line summaries.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py --deps docformatter && {PYTHON_EXE} -m docformatter --in-place --recursive {PATH} --exclude \"{EXCLUDE_PATTERNS}\" --wrap-summaries 0 --wrap-descriptions 0 --make-summary-multi-line",
+    "group": "Python Maintenance",
+    "shortcut": "P O",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable in the virtual environment",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "EXCLUDE_PATTERNS",
+        "description": "Comma-separated list of patterns to exclude",
+        "default": ".*,.mypy_cache,.venv"
+      },
+      {
+        "name": "PATH",
+        "description": "Path to the directory",
+        "default": "."
+      }
+    ]
+  },
+  {
+    "name": "Ruff Check and Fix",
+    "description": "Run ruff with --fix.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py --deps ruff && {PYTHON_EXE} -m ruff check {PATH} --fix --exclude \"{EXCLUDE_PATTERNS}\"",
+    "group": "Python Maintenance",
+    "shortcut": "P R",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable in the virtual environment",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "EXCLUDE_PATTERNS",
+        "description": "Comma-separated list of patterns to exclude",
+        "default": ".*,.mypy_cache,.venv"
+      },
+      {
+        "name": "PATH",
+        "description": "Path to the directory to lint and fix",
+        "default": "."
+      }
+    ]
+  },
+  {
+    "name": "Autoflake",
+    "description": "Remove unused imports and variables using autoflake.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py --deps autoflake && {PYTHON_EXE} -m autoflake --in-place --remove-all-unused-imports --remove-unused-variables --recursive {PATH} --exclude \"{EXCLUDE_PATTERNS}\"",
+    "group": "Python Maintenance",
+    "shortcut": "P A",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable in the virtual environment",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "EXCLUDE_PATTERNS",
+        "description": "Comma-separated list of patterns to exclude",
+        "default": ".*,.mypy_cache,.venv"
+      },
+      {
+        "name": "PATH",
+        "description": "Path to the directory",
+        "default": "."
+      }
+    ]
+  },
+  {
+    "name": "Full Check (MonkeyType, Format, Lint, Dead Code, Docformatter)",
+    "description": "Runs MonkeyType, Autoflake, Format and Lint, Find Dead Code and Docformatter in sequence.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py && {PYTHON_EXE} .intelag/commands/scripts/full_check.py --python-exe {PYTHON_EXE} --path {PATH} --exclude \"{EXCLUDE_PATTERNS}\"",
+    "group": "Python Maintenance",
+    "shortcut": "P C",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable in the virtual environment",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "EXCLUDE_PATTERNS",
+        "description": "Comma-separated list of patterns to exclude",
+        "default": ".*,.mypy_cache,.venv"
+      },
+      {
+        "name": "PATH",
+        "description": "Path to the directory",
+        "default": "."
+      }
+    ]
+  },
+  {
+    "name": "Bump Version",
+    "description": "Bump version in pyproject.toml (patch, minor, or major) with optional dry-run.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py && {PYTHON_EXE} .intelag/commands/scripts/version_bumper.py bump {BUMP_LEVEL} --file {TOML_PATH} {DRY_RUN}",
+    "group": "Python Tools",
+    "shortcut": "P B",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable in the virtual environment",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "BUMP_LEVEL",
+        "description": "Version bump level: patch (1), minor (2), or major (3)",
+        "default": "patch"
+      },
+      {
+        "name": "TOML_PATH",
+        "description": "Path to pyproject.toml file",
+        "default": "pyproject.toml"
+      },
+      {
+        "name": "DRY_RUN",
+        "description": "Add --dry-run to preview without changes, or leave empty",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "name": "Open Focused File in New Tab",
+    "description": "Open the currently active file in a new side-by-side tab.",
+    "type": "command",
+    "expression": "errorDashboard.openFocusInNewTab",
+    "group": "Utilities",
+    "shortcut": "U N",
+    "variables": []
+  },
+  {
+    "name": "Git: Find Large Files",
+    "description": "Analyze the repository and list files larger than X MB.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py --deps git-filter-repo && {PYTHON_EXE} -m git_filter_repo --analyze --force && {PYTHON_EXE} .intelag/commands/scripts/git_list_large_files.py --size {MIN_SIZE_MB} --output {OUTPUT_FILE}",
+    "group": "Git",
+    "shortcut": "G L",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "MIN_SIZE_MB",
+        "description": "Minimum file size in MB to list",
+        "default": "10"
+      },
+      {
+        "name": "OUTPUT_FILE",
+        "description": "Output file path for the report",
+        "default": ".intelag/reports/large_files_{DATE}.txt"
+      }
+    ]
+  },
+  {
+    "name": "Git: Remove Files from History",
+    "description": "Remove specified files from git history using git-filter-repo.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py --deps git-filter-repo && {PYTHON_EXE} .intelag/commands/scripts/remove_files.py --files \"{FILES_TO_REMOVE}\" --output {OUTPUT_FILE}",
+    "group": "Git",
+    "shortcut": "G R",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "FILES_TO_REMOVE",
+        "description": "Space-separated list of file paths to remove (e.g. 'path/to/file1 path/to/file2')",
+        "default": ""
+      },
+      {
+        "name": "OUTPUT_FILE",
+        "description": "Output file path for the log",
+        "default": ".intelag/reports/remove_files_log_{DATE}.txt"
+      }
+    ]
+  },
+  {
+    "name": "Security: Obfuscate Scripts (PyArmor)",
+    "description": "Protect your Python scripts by obfuscating them with PyArmor.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py && {PYTHON_EXE} .intelag/commands/scripts/secure_scripts.py --path {SOURCE_DIR} --output {OUTPUT_DIR}",
+    "group": "Security",
+    "shortcut": "S O",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "SOURCE_DIR",
+        "description": "Directory containing scripts to obfuscate",
+        "default": ".intelag/commands/scripts"
+      },
+      {
+        "name": "OUTPUT_DIR",
+        "description": "Output directory for the secured scripts",
+        "default": ".intelag/commands/secure_scripts"
+      }
+    ]
+  },
+  {
+    "name": "Rename Codebase: Classes and Files",
+    "description": "Rename files, directories, and classes based on a YAML plan.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py --deps pyyaml && {PYTHON_EXE} .intelag/commands/scripts/refactor_repo.py {PLAN_PATH}",
+    "group": "Refactoring",
+    "shortcut": "R R",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "PLAN_PATH",
+        "description": "Path to the YAML renaming plan",
+        "default": ".intelag/commands/renaming_plan.yaml"
+      }
+    ]
+  },
+  {
+    "name": "Git: Edit Past Commit",
+    "description": "Uncommit a previous commit to edit its changes. Uses rebase -i and reset HEAD^.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py && {PYTHON_EXE} .intelag/commands/scripts/git_edit_commit.py {COMMIT}",
+    "group": "Git",
+    "shortcut": "G E",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "COMMIT",
+        "description": "The commit hash or reference to edit (e.g. HEAD~2 or a hash)",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "name": "Git: Rename Repo (Cloud + Remote URL)",
+    "description": "Rename the repo on the cloud (GitHub via gh CLI if available) and update the local remote URL. Run from repo root.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py && {PYTHON_EXE} .intelag/commands/scripts/git_rename_repo.py --new-name \"{NEW_NAME}\" --remote {REMOTE} {SKIP_CLOUD}",
+    "group": "Git",
+    "shortcut": "G M",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "NEW_NAME",
+        "description": "New repository name (e.g. my-project-v2)",
+        "default": ""
+      },
+      {
+        "name": "REMOTE",
+        "description": "Remote to update",
+        "default": "origin"
+      },
+      {
+        "name": "SKIP_CLOUD",
+        "description": "Only update local remote URL (skip renaming on GitHub)",
+        "default": "",
+        "options": [
+          {
+            "value": "",
+            "label": "No (rename on cloud if possible)"
+          },
+          {
+            "value": "--skip-cloud",
+            "label": "Yes (only update remote URL)"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Git: Clone A Folder (Push)",
+    "description": "Turn an existing folder into its own Git repo and push to an already-created GitHub repo.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py && {PYTHON_EXE} .intelag/commands/scripts/git_clone_folder.py --folder \"{FOLDER}\" --repo-url \"{REPO_URL}\"",
+    "group": "Git",
+    "shortcut": "G N",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "FOLDER",
+        "description": "Path to the folder to turn into a repo (relative to workspace or absolute)",
+        "default": "."
+      },
+      {
+        "name": "REPO_URL",
+        "description": "GitHub repo URL (e.g. https://github.com/org/repo.git)",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "name": "Git: Clone A Folder (Push & Add as Submodule)",
+    "description": "Turn a folder into its own Git repo, push to GitHub, then add it back to the main project as a git submodule.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py && {PYTHON_EXE} .intelag/commands/scripts/git_clone_folder.py --folder \"{FOLDER}\" --repo-url \"{REPO_URL}\" --add-as-submodule",
+    "group": "Git",
+    "shortcut": "G S",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "FOLDER",
+        "description": "Path to the folder to turn into a repo (relative to workspace or absolute)",
+        "default": "."
+      },
+      {
+        "name": "REPO_URL",
+        "description": "GitHub repo URL (e.g. https://github.com/org/repo.git)",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "name": "Security: GitGuardian Secret Scan",
+    "description": "Scan the repository for secrets using GitGuardian (requires 'ggshield auth login').",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py && {PYTHON_EXE} .intelag/commands/scripts/security_check.py --full-history --path {PATH} --output {OUTPUT_FILE}",
+    "group": "Security",
+    "shortcut": "S G",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "PATH",
+        "description": "Path to the repository to scan",
+        "default": "."
+      },
+      {
+        "name": "OUTPUT_FILE",
+        "description": "Output file path for the report",
+        "default": ".intelag/reports/security_scan_{DATE}.txt"
+      }
+    ]
+  },
+  {
+    "name": "Security: TruffleHog Deep Scan",
+    "description": "Deep scan git history for high-entropy secrets.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py && {PYTHON_EXE} .intelag/commands/scripts/trufflehog_check.py --path {PATH} --output {OUTPUT_FILE} --entropy",
+    "group": "Security",
+    "shortcut": "S T",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "PATH",
+        "description": "Path to scan (default current repo)",
+        "default": "."
+      },
+      {
+        "name": "OUTPUT_FILE",
+        "description": "Output file path for the report",
+        "default": ".intelag/reports/trufflehog_scan_{DATE}.txt"
+      }
+    ]
+  },
+  {
+    "name": "Security: Remove Secret from History",
+    "description": "Rewrite git history to remove a specific secret string (Destructive!).",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py && {PYTHON_EXE} .intelag/commands/scripts/git_replace_secrets.py --repo-path {PATH} --secret-text \"{SECRET_TEXT}\" --confirm",
+    "group": "Security",
+    "shortcut": "S R",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "PATH",
+        "description": "Path to the repository",
+        "default": "."
+      },
+      {
+        "name": "SECRET_TEXT",
+        "description": "The exact secret string to remove",
+        "default": "CHANGE_ME"
+      }
+    ]
+  },
+  {
+    "name": "Security: Git Sanity Check (Hardening)",
+    "description": "Install pre-commit hooks, update .gitignore, and create .env template.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py && {PYTHON_EXE} .intelag/commands/scripts/git_sanity_check.py && timeout 5",
+    "group": "Security",
+    "shortcut": "S H",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      }
+    ]
+  },
+  {
+    "name": "New Agent Request",
+    "description": "Create a new agent request file from a template.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py && {PYTHON_EXE} .intelag/commands/scripts/create_request.py \"{FILENAME}\" --template-file \".intelag/commands/scripts/templates/{TEMPLATE_FILE}\" --template-name \"{TEMPLATE_NAME}\" --template \"{CLIPBOARD_PROMPT}\"",
+    "group": "Agent",
+    "shortcut": "A R",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "TEMPLATE_FILE",
+        "description": "Select a template file",
+        "default": "",
+        "optionsDirectory": ".intelag/commands/scripts/templates",
+        "optionsExtension": ".txt"
+      },
+      {
+        "name": "TEMPLATE_NAME",
+        "description": "Select a template section",
+        "default": "",
+        "optionsFile": ".intelag/commands/scripts/templates/{TEMPLATE_FILE}",
+        "optionsPattern": "____________________ \\[(.*?)\\]"
+      },
+      {
+        "name": "FILENAME",
+        "description": "Enter name for the request file",
+        "default": "new_request"
+      },
+      {
+        "name": "CLIPBOARD_PROMPT",
+        "description": "The prompt template to copy to clipboard (use {FILE_PATH} for the file path)",
+        "default": "Execture my requests in {FILE_PATH}."
+      }
+    ]
+  },
+  {
+    "name": "New Agent Request [PYTHON]",
+    "description": "Create a new agent request using the Python template.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py && {PYTHON_EXE} .intelag/commands/scripts/create_request.py \"{FILENAME}\" --template-file \".intelag/commands/scripts/templates/python.txt\" --template-name \"{TEMPLATE_NAME}\" --template \"{CLIPBOARD_PROMPT}\"",
+    "group": "Agent",
+    "shortcut": "A P",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "TEMPLATE_NAME",
+        "description": "Select a template section",
+        "default": "",
+        "optionsFile": ".intelag/commands/scripts/templates/python.txt",
+        "optionsPattern": "____________________ \\[(.*?)\\]"
+      },
+      {
+        "name": "FILENAME",
+        "description": "Enter name for the request file",
+        "default": "python_request"
+      },
+      {
+        "name": "CLIPBOARD_PROMPT",
+        "description": "The prompt template to copy to clipboard (use {FILE_PATH} for the file path)",
+        "default": "Execture my requests in {FILE_PATH}."
+      }
+    ]
+  },
+  {
+    "name": "New Agent Request [FLUTTER]",
+    "description": "Create a new agent request using the Flutter template.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py && {PYTHON_EXE} .intelag/commands/scripts/create_request.py \"{FILENAME}\" --template-file \".intelag/commands/scripts/templates/flutter.txt\" --template-name \"{TEMPLATE_NAME}\" --template \"{CLIPBOARD_PROMPT}\"",
+    "group": "Agent",
+    "shortcut": "A F",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "TEMPLATE_NAME",
+        "description": "Select a template section",
+        "default": "",
+        "optionsFile": ".intelag/commands/scripts/templates/flutter.txt",
+        "optionsPattern": "____________________ \\[(.*?)\\]"
+      },
+      {
+        "name": "FILENAME",
+        "description": "Enter name for the request file",
+        "default": "flutter_request"
+      },
+      {
+        "name": "CLIPBOARD_PROMPT",
+        "description": "The prompt template to copy to clipboard (use {FILE_PATH} for the file path)",
+        "default": "Execture my requests in {FILE_PATH}."
+      }
+    ]
+  },
+  {
+    "name": "Git Branch Tree",
+    "description": "Visualize Git branch relationships in a tree/forest plot using matplotlib.",
+    "type": "script",
+    "expression": "python .intelag/commands/scripts/_venv_utils.py --deps matplotlib && {PYTHON_EXE} .intelag/commands/scripts/git_branch_tree.py --repo {REPO}",
+    "group": "Git",
+    "shortcut": "G T",
+    "variables": [
+      {
+        "name": "PYTHON_EXE",
+        "description": "Path to the Python executable in the virtual environment",
+        "default": ".venv\\Scripts\\python.exe",
+        "showPrompt": false
+      },
+      {
+        "name": "REPO",
+        "description": "Path to the git repository",
+        "default": "."
+      }
+    ]
+  },
+  {
+    "name": "Activate .venv (PowerShell)",
+    "description": "Activate the local .venv in the current PowerShell terminal.",
+    "type": "script",
+    "expression": "if (Test-Path \".venv\\Scripts\\Activate.ps1\") { .\\.venv\\Scripts\\Activate.ps1 } else { Write-Host \"[Intelag] .venv not found at .venv\\Scripts\\Activate.ps1\" -ForegroundColor Red; exit 1 }",
+    "group": "Python Maintenance",
+    "shortcut": "I E",
+    "variables": []
+  }
+]

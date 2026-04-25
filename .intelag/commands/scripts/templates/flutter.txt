@@ -1,0 +1,116 @@
+
+____________________ [FLUTTER_SIMPLE]
+PROBLEM STATEMENT:
+
+
+REQUEST 1:
+
+REQUEST 2:
+
+
+REQUEST 3:
+
+
+---
+RULES:
+    - Do not skip steps, do not partially complete tasks, and ensure full compliance with the project standards and stability requirements.
+    - Process them sequentially, one by one, and fully complete each before moving to the next.
+    - Do not ask for confirmation. Execute all my requests without asking for confirmation.
+
+
+
+____________________ [FLUTTER_RULE_SIMPLE]
+PROBLEM STATEMENT:
+
+
+REQUEST 1:
+
+REQUEST 2:
+
+
+REQUEST 3:
+
+
+---
+RULES:
+    - Strictly apply all rules defined in .intelag.agent\instructions\flutter.md
+    - Do not skip steps, do not partially complete tasks, and ensure full compliance with the project standards and stability requirements.
+    - Process them sequentially, one by one, and fully complete each before moving to the next.
+    - Do not ask for confirmation. Execute all my requests without asking for confirmation.
+    - Complete the OUTPUT section after completing all the requests.
+
+____________________ [FLUTTER_RULE_OUTPUT]
+PROBLEM STATEMENT:
+
+
+REQUEST 1:
+
+REQUEST 2:
+
+
+REQUEST 3:
+
+
+---
+RULES:
+    - Strictly apply all rules defined in .intelag.agent\instructions\flutter.md
+    - Do not skip steps, do not partially complete tasks, and ensure full compliance with the project standards and stability requirements.
+    - Process them sequentially, one by one, and fully complete each before moving to the next.
+    - Do not ask for confirmation. Execute all my requests without asking for confirmation.
+    - Complete the OUTPUT section after completing all the requests.
+
+---
+OUTPUT:
+    REQUEST 1:
+        STATUS: {STATUS (DONE/PARTIALLY_DONE/NOT_DONE)}
+        NOTE: {NOTE}
+        NEXT:
+    REQUEST 2:
+        STATUS: {STATUS (DONE/PARTIALLY_DONE/NOT_DONE)}
+        NOTE: {NOTE}
+        NEXT:
+    REQUEST 3:
+        STATUS: {STATUS (DONE/PARTIALLY_DONE/NOT_DONE)}
+        NOTE: {NOTE}
+        NEXT:
+
+____________________ [FLUTTER_RULE_PLAN]
+PROBLEM STATEMENT:
+
+
+REQUEST 1:
+Think deeply about the problem statement and come up with a plan to solve it, and write it down in the PLAN section.
+
+REQUEST 2:
+
+
+REQUEST 3:
+
+
+---
+RULES:
+    - Strictly apply all rules defined in .intelag.agent\instructions\flutter.md
+    - Do not skip steps, do not partially complete tasks, and ensure full compliance with the project standards and stability requirements.
+    - Process them sequentially, one by one, and fully complete each before moving to the next.
+    - Do not ask for confirmation. Execute all my requests without asking for confirmation.
+    - Complete the OUTPUT section after completing all the requests.
+
+---
+PLAN:
+
+
+
+---
+OUTPUT:
+    REQUEST 1:
+        STATUS: {STATUS (DONE/PARTIALLY_DONE/NOT_DONE)}
+        NOTE: {NOTE}
+        NEXT:
+    REQUEST 2:
+        STATUS: {STATUS (DONE/PARTIALLY_DONE/NOT_DONE)}
+        NOTE: {NOTE}
+        NEXT:
+    REQUEST 3:
+        STATUS: {STATUS (DONE/PARTIALLY_DONE/NOT_DONE)}
+        NOTE: {NOTE}
+        NEXT:

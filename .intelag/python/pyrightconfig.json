@@ -1,0 +1,39 @@
+{
+    "include": [
+        "."
+    ],
+    "exclude": [
+        "**/.venv",
+        "**/.*",
+        "**/__*__",
+        "**/*.egg-info",
+        "**/node_modules",
+        "build",
+        "dist",
+        "venv",
+        ".venv",
+        "env",
+        ".env",
+        ".mypy_cache",
+        ".ruff_cache",
+        ".pytest_cache",
+        ".tox",
+        "intelag_vsix_packages",
+        "intelag_vsix_creator",
+        "common_media",
+        "script",
+        "intelag_packages",
+        "intelag_data_collection_manager"
+    ],
+    "venvPath": ".",
+    "venv": ".venv",
+    "typeCheckingMode": "strict",
+    "useLibraryCodeForTypes": true,
+    "reportMissingTypeStubs": false,
+    "pythonVersion": "3.11",
+    "pythonPlatform": "All",
+    "extraPaths": [
+        "./intelag_packages",
+        "./intelag_data_collection_manager"
+    ]
+}

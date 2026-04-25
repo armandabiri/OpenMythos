@@ -1,0 +1,61 @@
+# Intelag Ruff Configuration
+line-length = 120
+target-version = "py311"
+exclude = [
+    "__*__",
+    "build",
+    "dist",
+    "venv",
+    ".venv",
+    "env",
+    ".env",
+    "node_modules",
+    "*.egg-info",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".pytest_cache",
+    ".tox",
+    "intelag_vsix_packages",
+    "intelag_vsix_creator",
+    "common_media",
+    "script",
+    "intelag_packages",
+]
+
+[lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "ARG", # flake8-unused-arguments
+    "PTH", # flake8-use-pathlib
+    "RUF", # Ruff-specific rules
+    "TID", # tidy-imports
+]
+ignore = [
+    "UP006", # Prefer Union[X, Y] over X | Y (project style)
+    "UP007", #
+    "UP045", # Keep Union[X, Y] instead of X | Y
+    "UP035", # Allow typing.List, typing.Dict, etc.
+    "UP037", # Allow quoted type annotations
+]
+
+[lint.isort]
+known-first-party = ["intelag"]
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder",
+]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

@@ -1,0 +1,172 @@
+# ==============================================================================
+# INTELAG PYTHON PROJECT TEMPLATE
+# ==============================================================================
+# This template follows the official Intelag standards for Python projects.
+# Please fill in the sections marked with [FILL THIS].
+# ==============================================================================
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+# [FILL THIS] The package name (use underscores, e.g., "my_new_tool")
+name = "PROJECT_NAME"
+
+# [FILL THIS] Initial version (Semantic Versioning recommended)
+version = "1.0.0"
+
+# [FILL THIS] One-sentence description of the project
+description = "A brief description of the project."
+
+readme = "README.md"
+requires-python = ">=3.11"
+
+# [FILL THIS] List the authors of the project
+authors = [{ name = "AUTHOR_NAME", email = "author@intelag.com" }]
+
+# [FILL THIS] Main dependencies (e.g., ["rich", "requests"])
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff", "mypy"]
+
+[project.scripts]
+# [FILL THIS] Define CLI commands here
+# Format: command_name = "package.module:function"
+# example: my-tool = "my_package.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["*"] # [FILL THIS] Restrict to your package name if needed
+
+# ================================ STANDARD INTELAG RULES ================================
+# DO NOT CHANGE THESE UNLESS NECESSARY TO MAINTAIN CONSISTENCY ACROSS REPOS
+# ==============================================================================
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+exclude = [
+    ".*",
+    "__*__",
+    "build",
+    "dist",
+    "venv",
+    ".venv",
+    "env",
+    ".env",
+    "node_modules",
+    "*.egg-info",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".pytest_cache",
+    ".tox",
+    "intelag_vsix_packages",
+    "intelag_vsix_creator",
+    "common_media",
+    "script",
+]
+
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "ARG", # flake8-unused-arguments
+    "PTH", # flake8-use-pathlib
+    "RUF", # Ruff-specific rules
+    "TID", # tidy-imports
+]
+ignore = [
+    "UP006", # Prefer Union[X, Y] over X | Y (project style)
+    "UP007", #
+    "UP045", # Keep Union[X, Y] instead of X | Y
+    "UP035", # Import from {target} instead: {names}
+    "UP037", # Remove quotes from type annotation
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["intelag"]
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder",
+]
+
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+exclude = [
+    '\..*',
+    '__.*__',
+    'build',
+    'dist',
+    'venv',
+    '\.venv',
+    'env',
+    '\.env',
+    'node_modules',
+    '.*\.egg-info',
+    '\.mypy_cache',
+    '\.ruff_cache',
+    '\.pytest_cache',
+    '\.tox',
+    'intelag_vsix_packages',
+    'intelag_vsix_creator',
+    'common_media',
+    'script',
+    'intelag_packages',
+    'intelag_data_collection_manager',
+]
+
+[[tool.mypy.overrides]]
+module = ["psycopg2.*", "yaml.*", "rich.*"]
+ignore_missing_imports = true
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["E402", "ARG001", "RUF012"]
+"examples/**" = ["E402"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = "-ra -q --tb=short"
+
+# Subpackages in intelag_packages are separate installable packages; their tests
+# require the package to be installed. Exclude from root-level pytest so pre-push
+# only runs the main repo tests.
+norecursedirs = [
+    ".git",
+    "__pycache__",
+    "*.egg-info",
+    ".venv",
+    "venv",
+    "env",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".tox",
+    "intelag_packages",
+    "intelag_vsix_packages",
+    "intelag_vsix_creator",
+    "common_media",
+    "node_modules",
+    "build",
+    "dist",
+    "script",
+]
