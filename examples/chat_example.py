@@ -200,7 +200,7 @@ def main() -> None:
     parser.add_argument("--prompt", type=str, default="Hi how are you?")
     parser.add_argument("--max-new-tokens", type=int, default=64)
     parser.add_argument("--n-loops", type=int, default=4)
-    parser.add_argument("--temperature", type=float, default=0.7)
+    parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--top-k", type=int, default=50)
     parser.add_argument("--device", type=str, default=None)
     args = parser.parse_args()
