@@ -29,7 +29,6 @@ if hasattr(sys.stdout, "reconfigure"):
 from open_mythos import MythosConfig, OpenMythos
 from open_mythos.tokenizer import DEFAULT_MODEL_ID, MythosTokenizer
 
-
 DEFAULT_FALLBACK_MODEL = "HuggingFaceTB/SmolLM2-360M-Instruct"
 
 
@@ -87,10 +86,7 @@ def run_mythos(args: argparse.Namespace, device: str) -> None:
         model.load_state_dict(ckpt["model"])
         print(f"Resumed from step {ckpt['step']}")
     else:
-        print(
-            "Building tiny RANDOM-INIT OpenMythos model. "
-            "This is a smoke test only; output will be gibberish."
-        )
+        print("Building tiny RANDOM-INIT OpenMythos model. This is a smoke test only; output will be gibberish.")
         model = OpenMythos(tiny_config(vocab_size))
         cfg = model.cfg
 
@@ -197,7 +193,7 @@ def main() -> None:
         default=DEFAULT_FALLBACK_MODEL,
         help="HF fallback model to use when no OpenMythos checkpoint is provided",
     )
-    parser.add_argument("--prompt", type=str, default="Hi how are you?")
+    parser.add_argument("--prompt", type=str, default="Which year we are living and what is the population of STL?")
     parser.add_argument("--max-new-tokens", type=int, default=64)
     parser.add_argument("--n-loops", type=int, default=4)
     parser.add_argument("--temperature", type=float, default=0.0)
